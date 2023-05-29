@@ -1,0 +1,11 @@
+{
+  "name": "netflix-clone-js",
+  "version": "1.0.0",
+  "description": "netflix clone using html, css (bootstrap) and simple js",
+  "main": "index.html",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Osaite Arigbe-Osula",
+  "license": "ISC"
+}
