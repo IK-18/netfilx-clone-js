@@ -1,111 +1,167 @@
-/* 
-
-These are the 3 main functions and their URL'S you must create  👇
-========================================
-
-- getOriginals()
-  * URL : 'https://api.themoviedb.org/3/discover/tv?api_key=19f84e11932abbc79e6d83f82d6d1045&with_networks=213'
-
-- getTrendingNow()
-  * URL : 'https://api.themoviedb.org/3/trending/movie/week?api_key=19f84e11932abbc79e6d83f82d6d1045'
-
-- getTopRated()
-  * URL : 'https://api.themoviedb.org/3/movie/top_rated?api_key=19f84e11932abbc79e6d83f82d6d1045&language=en-US&page=1'
-
-
-** These functions will provide the URL you need to fetch() movies of that genere **
-
-*/
-
 window.onload = () => {
-  getOriginals();
-  getTrendingNow();
-  getTopRated();
+	getOriginals();
+	getTrendingNow();
+	getTopRated();
+	fetchFeaturedProperties();
 };
 
-// ** Helper function that makes dynamic API calls **
+window.onscroll = () => {
+	if (document.documentElement.scrollTop >= 80) {
+		document.getElementsByTagName("header")[0].style.backgroundColor =
+			"black";
+	} else {
+		document.getElementsByTagName("header")[0].style.backgroundColor =
+			"transparent";
+	}
+};
+
 function fetchMovies(url, dom_element, path_type) {
-  // Use Fetch with the url passed down
-  fetch(url)
-    .then((res) => {
-      return res.json();
-    })
-    .then((json) => {
-      showMovies(json, dom_element, path_type);
-    });
+	fetch(url)
+		.then((res) => {
+			return res.json();
+		})
+		.then((json) => {
+			showMovies(json, dom_element, path_type);
+		});
 }
 
-//  ** Function that displays the movies to the DOM **
+let handleMovieSelection = (e) => {
+	let mid = e.target.dataset.id;
+	let modal = document.getElementById("trailerModal");
+	modal.style.display = "block";
+	modal.style.opacity = 1;
+	getMovieTrailer(mid);
+};
+
 showMovies = (movies, dom_element, path_type) => {
-  // Create a variable that grabs id or class
-  let ele = document.querySelector(dom_element);
+	let ele = document.querySelector(dom_element);
 
-  let handleMovieSelection = (e) => {
-    let t = e.target;
-    let mid = t.dataset.id;
-    let modal = document.getElementById("trailerModal");
-    modal.style.opacity = 1;
-    getMovieTrailer(mid);
-  };
-
-  for (let movie of movies.results) {
-    let image = document.createElement("img");
-    image.setAttribute("data-id", movie.id);
-    image.src = `https://image.tmdb.org/t/p/original${movie[path_type]}`;
-    image.addEventListener("click", handleMovieSelection);
-    ele.appendChild(image);
-    console.log(image.dataset.id);
-  }
+	for (let movie of movies.results) {
+		let image = document.createElement("img");
+		image.setAttribute("data-id", movie.id);
+		image.src = `https://image.tmdb.org/t/p/original${movie[path_type]}`;
+		image.addEventListener("click", handleMovieSelection);
+		ele.appendChild(image);
+	}
 };
 
 function getOriginals() {
-  let url =
-    "https://api.themoviedb.org/3/discover/tv?api_key=19f84e11932abbc79e6d83f82d6d1045&with_networks=213";
-  fetchMovies(url, ".original__movies", "backdrop_path");
+	let url =
+		"https://api.themoviedb.org/3/discover/tv?api_key=19f84e11932abbc79e6d83f82d6d1045&with_networks=213";
+	fetchMovies(url, ".original__movies", "poster_path");
 }
 function getTrendingNow() {
-  let url =
-    "https://api.themoviedb.org/3/trending/movie/week?api_key=19f84e11932abbc79e6d83f82d6d1045";
-  fetchMovies(url, "#trending", "poster_path");
+	let url =
+		"https://api.themoviedb.org/3/trending/movie/week?api_key=19f84e11932abbc79e6d83f82d6d1045";
+	fetchMovies(url, "#trending", "poster_path");
 }
 function getTopRated() {
-  let url =
-    "https://api.themoviedb.org/3/movie/top_rated?api_key=19f84e11932abbc79e6d83f82d6d1045&language=en-US&page=1";
-  fetchMovies(url, "#top_rated", "poster_path");
+	let url =
+		"https://api.themoviedb.org/3/movie/top_rated?api_key=19f84e11932abbc79e6d83f82d6d1045&language=en-US&page=1";
+	fetchMovies(url, "#top_rated", "poster_path");
 }
 
-// ** BONUS **
+let backg = document.querySelector(".featured");
+let title = document.querySelector(".featured_title");
+let desc = document.querySelector(".featured__description");
+let backTrailer = document.getElementById("featuredTrailer");
+let play = document.querySelector(".play");
 
-// ** Fetches URL provided and returns response.json()
-async function getMovieTrailer(id) {
-  let url = `https://api.themoviedb.org/3/movie/${id}/videos?api_key=19f84e11932abbc79e6d83f82d6d1045&language=en-US`;
-  fetch(url)
-    .then((res) => {
-      return res.json();
-    })
-    .then((json) => {
-      console.log(json);
-      setTrailer(json);
-    });
-}
-
-// ** Function that adds movie data to the DOM
-const setTrailer = (trailers) => {
-  // Set up iframe variable to hold id of the movieTrailer Element
-  const iframe = document.getElementById("movieTrailer");
-  // Set up variable to select .movieNotFound element
-  const movieNotFound = document.querySelector(".movieNotFound");
-
-  // If there is a trailer add the src for it
-  if (trailers.length > 0) {
-    // add d-none class to movieNotFound and remove it from iframe
-    movieNotFound.classList.add("d-none");
-    iframe.classList.remove("d-none");
-    // add youtube link with trailers key to iframe.src
-    iframe.src = `${trailers.key}`;
-  } else {
-    // Else remove d-none class to movieNotfound and ADD it to iframe
-    movieNotFound.classList.remove("d-none");
-    iframe.classList.add("d-none");
-  }
+let fetchFeaturedProperties = () => {
+	let url =
+		"https://api.themoviedb.org/3/trending/movie/week?api_key=19f84e11932abbc79e6d83f82d6d1045";
+	fetch(url)
+		.then((res) => {
+			return res.json();
+		})
+		.then((json) => {
+			setFeaturedProperties(json);
+			setTimeout(() => {
+				setFeaturedProperties(json);
+			}, 60000);
+		});
 };
+
+let setFeaturedProperties = (movies) => {
+	let len = movies.results.length - 1;
+	let backid = Math.floor(Math.random() * len);
+	let id = movies.results[backid].id;
+	backg.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${movies.results[backid].backdrop_path})`;
+	title.innerText = `${movies.results[backid].title}`;
+	desc.innerText = `${movies.results[backid].overview}`;
+	if (!backTrailer.classList.contains("d-none")) {
+		backTrailer.classList.add("d-none");
+		backTrailer.src = "";
+	}
+	fetchFeaturedTrailer(id);
+};
+
+let fetchFeaturedTrailer = (id) => {
+	let url = `https://api.themoviedb.org/3/movie/${id}/videos?api_key=19f84e11932abbc79e6d83f82d6d1045&language=en-US`;
+	fetch(url)
+		.then((res) => {
+			return res.json();
+		})
+		.then((json) => {
+			setTimeout(() => {
+				setFeaturedTrailer(json);
+			}, 5000);
+		});
+};
+
+let setFeaturedTrailer = (trailers) => {
+	let source;
+	for (let trailer of trailers.results) {
+		if (trailer.type == "Trailer") {
+			source = trailer.key;
+		}
+	}
+	play.setAttribute("href", `https://www.youtube.com/watch?v=${source}`);
+	backTrailer.classList.remove("d-none");
+	backTrailer.src = `https://www.youtube.com/embed/${source}?autoplay=1`;
+};
+
+async function getMovieTrailer(id) {
+	let url = `https://api.themoviedb.org/3/movie/${id}/videos?api_key=19f84e11932abbc79e6d83f82d6d1045&language=en-US`;
+	fetch(url)
+		.then((res) => {
+			return res.json();
+		})
+		.then((json) => {
+			setTrailer(json);
+		});
+}
+
+const setTrailer = (trailers) => {
+	const iframe = document.getElementById("movieTrailer");
+	const movieNotFound = document.querySelector(".movieNotFound");
+
+	if (trailers.results.length > 0) {
+		document.getElementById("trailerModal").classList.remove("d-none");
+		movieNotFound.classList.add("d-none");
+		iframe.classList.remove("d-none");
+		for (let trailer of trailers.results) {
+			if (trailer.type == "Trailer") {
+				let source = trailer.key;
+			}
+		}
+		iframe.src = `https://www.youtube.com/embed/${source}?autoplay=1`;
+	} else {
+		document.getElementById("trailerModal").classList.remove("d-none");
+		movieNotFound.classList.remove("d-none");
+		iframe.classList.add("d-none");
+		iframe.src = "";
+	}
+};
+
+let closeModal = (e) => {
+	if (
+		document.getElementById("trailerModal").style.display == "block" &&
+		(e.target.matches(".close") || !e.target.closest(".modal-content"))
+	) {
+		document.getElementById("trailerModal").classList.add("d-none");
+		document.getElementById("movieTrailer").src = "";
+	}
+};
+
+document.addEventListener("click", closeModal);
